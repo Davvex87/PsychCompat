@@ -13,21 +13,15 @@ class LevelRegistryFiller
 {
 	public static function fillModLevels(mod:PsychMod):Void
 	{
-		if (mod.weeks.length == 0)
-		{
-			trace('No weeks found for mod "${mod.name}".');
-			return;
-		}
+		var nWeeks:Int = 0;
 
-		trace('Loading ${mod.weeks.length} week(s)');
-
-		for (week in mod.weeks)
+		for (fileName => week in mod.weeks)
 		{
-			trace('Registering week ${week.weekName} as level...');
+			trace('Registering week "${fileName}" ("${week.weekName}") as level...');
 			var translatedLevelData = {
 				version: "1.0.0",
 				name: week.weekName,
-				titleAsset: 'storymenu/${week.weekName}',
+				titleAsset: 'storymenu/${fileName}',
 				props: [], // TODO: level props (characters in story menu)
 				visible: !week.hideStoryMode,
 				songs: [],
@@ -39,7 +33,13 @@ class LevelRegistryFiller
 
 			var translatedStr = Json.stringify(translatedLevelData);
 
-			var id = '${mod.normalizedName}-${StringNormalizer.normalizeString(week.weekName)}';
+			var id = '${mod.normalizedName}-${StringNormalizer.normalizeString(fileName)}';
+			if (@:privateAccess LevelRegistry.instance.entries.exists(id))
+			{
+				trace('Skipping week "${fileName}" because level id "${id}" is already registered.');
+				continue;
+			}
+
 			var levelData = LevelRegistry.instance.parseEntryDataRaw(translatedStr, id);
 			if (levelData == null) continue;
 
@@ -48,8 +48,13 @@ class LevelRegistryFiller
 			Reflect.setProperty(level, "_data", levelData);
 
 			@:privateAccess LevelRegistry.instance.entries.set(id, level);
+
+			nWeeks++;
 		}
 
-		trace(LevelRegistry.instance.listSortedLevelIds().join(", "));
+		if (nWeeks == 0)
+			trace('No weeks found for mod "${mod.name}".');
+		else
+			trace(LevelRegistry.instance.listSortedLevelIds().join(", "));
 	}
 }

@@ -2,6 +2,7 @@ package psychcompat;
 
 import psychcompat.utils.StringNormalizer;
 import StringTools;
+import haxe.ds.StringMap;
 
 class PsychMod
 {
@@ -11,7 +12,7 @@ class PsychMod
 	public var name:String;
 	public var normalizedName:String;
 
-	public var weeks:Array<PsychWeek>;
+	public var weeks:Map<String, PsychWeek>;
 	public var rawSongs:Array<PsychRawSongGroup>;
 	public var songs:Array<PsychParsedSongGroup>;
 
@@ -23,7 +24,7 @@ class PsychMod
 		name = pack.name;
 		normalizedName = StringNormalizer.normalizeString(name);
 
-		weeks = [];
+		weeks = new StringMap();
 		rawSongs = [];
 		songs = [];
 	}
@@ -105,7 +106,12 @@ typedef PsychRawSongGroup = {
 
 typedef PsychParsedSongGroup = {
 	var name:String;
-	var variant:String;
-	var difficulties:Map<String, PsychSong>;
+	var variants:Array<PsychParsedVariant>;
 	var events:Array<Dynamic>;
+}
+
+typedef PsychParsedVariant = {
+	var id:String;
+	var audioFolder:String;
+	var difficulties:Map<String, PsychSong>;
 }

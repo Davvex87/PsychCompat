@@ -23,7 +23,7 @@ class PsychModDataLoader
 		trace("Loading weeks...");
 
 		var weeksList = fs.readDirectory(Path.join([folderPath, "weeks"]));
-		var weeks:Map<String, PsychWeek> = new StringMap();
+		var weeks:Array<PsychWeek> = [];
 		for (weekFileName in weeksList)
 		{
 			if (!StringTools.endsWith(weekFileName, ".json"))
@@ -35,13 +35,13 @@ class PsychModDataLoader
 			var weekPath = Path.join([folderPath, "weeks", weekFileName]);
 			var weekData = fs.getFileContent(weekPath);
 			var week = Json.parse(weekData);
-			
-			weeks.set(weekFileName, week);
 
-			psychMod.weeks.push(week);
+			weeks.push(week);
+
+			psychMod.weeks.set(Path.withoutExtension(weekFileName), week);
 		}
 
-		trace('Loaded ${psychMod.weeks.length} week(s)');
+		trace('Loaded ${weeks.length} week(s)');
 
 
 
@@ -52,9 +52,8 @@ class PsychModDataLoader
 		trace("Loading songs...");
 
 		var songsList = fs.readDirectory(Path.join([folderPath, "data"]));
-		var songs:Map<String, PsychSong> = new StringMap();
 		var validSongsList = [];
-		for (weekName => week in weeks)
+		for (week in weeks)
 		{
 			for (song in week.songs)
 			{
@@ -150,7 +149,8 @@ class PsychModDataLoader
 
 		for (rawGroup in psychMod.rawSongs)
 		{
-			var difficulties:Map<String, PsychSong> = new StringMap();
+			var buckets:Map<String, Map<String, PsychSong>> = new StringMap();
+			var bucketOrder:Array<String> = [];
 			var difficultyCount:Int = 0;
 
 			for (rawDiffName => rawChart in rawGroup.difficulties)
@@ -162,14 +162,23 @@ class PsychModDataLoader
 				}
 
 				var diffId = normalizeDifficultyId(rawDiffName);
+				var audioFolder = resolveAudioFolder(rawChart, rawGroup.folderName);
 
-				if (difficulties.exists(diffId))
+				var bucket = buckets.get(audioFolder);
+				if (bucket == null)
 				{
-					trace('Skipping difficulty "${rawDiffName}" of song "${rawGroup.folderName}" because it normalizes to "${diffId}", which is already taken.');
+					bucket = new StringMap();
+					buckets.set(audioFolder, bucket);
+					bucketOrder.push(audioFolder);
+				}
+
+				if (bucket.exists(diffId))
+				{
+					trace('Skipping difficulty "${rawDiffName}" of song "${rawGroup.folderName}" because it normalizes to "${diffId}", which is already taken in audio folder "${audioFolder}".');
 					continue;
 				}
 
-				difficulties.set(diffId, rawChart);
+				bucket.set(diffId, rawChart);
 				difficultyCount++;
 			}
 
@@ -179,19 +188,127 @@ class PsychModDataLoader
 				continue;
 			}
 
+			var defaultFolder = pickDefaultAudioFolder(bucketOrder, buckets, rawGroup.folderName);
+
+			var variants:Array<PsychParsedVariant> = [];
+			var usedIds:Array<String> = [DEFAULT_VARIANT];
+
+			variants.push({
+				id: DEFAULT_VARIANT,
+				audioFolder: defaultFolder,
+				difficulties: buckets.get(defaultFolder)
+			});
+
+			for (folder in bucketOrder)
+			{
+				if (folder == defaultFolder)
+					continue;
+
+				var variantId = buildVariantId(folder, rawGroup.folderName, usedIds);
+				usedIds.push(variantId);
+
+				variants.push({
+					id: variantId,
+					audioFolder: folder,
+					difficulties: buckets.get(folder)
+				});
+
+				trace('Song "${rawGroup.folderName}" gets variant "${variantId}" for audio folder "songs/${folder}"');
+			}
+
 			var parsedGroup:PsychParsedSongGroup = {
 				name: rawGroup.folderName,
-				variant: DEFAULT_VARIANT,
-				difficulties: difficulties,
+				variants: variants,
 				events: rawGroup.events != null ? rawGroup.events : []
 			};
 
 			psychMod.songs.push(parsedGroup);
 
-			trace('Built song group "${parsedGroup.name}" with ${difficultyCount} difficulty(s)');
+			trace('Built song group "${parsedGroup.name}" with ${difficultyCount} difficulty(s) across ${variants.length} variant(s)');
 		}
 
 		trace('Built ${psychMod.songs.length} parsed song group(s)');
+	}
+
+	public static function resolveAudioFolder(rawChart:PsychSong, fallbackFolder:String):String
+	{
+		if (rawChart.song == null || rawChart.song == "")
+			return fallbackFolder;
+
+		var folder = StringNormalizer.normalizeString(rawChart.song);
+		return folder == "" ? fallbackFolder : folder;
+	}
+
+	static function pickDefaultAudioFolder(bucketOrder:Array<String>, buckets:Map<String, Map<String, PsychSong>>, songFolder:String):String
+	{
+		if (buckets.exists(songFolder))
+			return songFolder;
+
+		for (folder in bucketOrder)
+			if (buckets.get(folder).exists("normal"))
+				return folder;
+
+		var best:String = bucketOrder[0];
+		var bestCount:Int = -1;
+
+		for (folder in bucketOrder)
+		{
+			var count:Int = 0;
+			for (diffId in buckets.get(folder).keys())
+				count++;
+
+			if (count > bestCount)
+			{
+				best = folder;
+				bestCount = count;
+			}
+		}
+
+		return best;
+	}
+
+	static function buildVariantId(audioFolder:String, songFolder:String, usedIds:Array<String>):String
+	{
+		var base = audioFolder;
+		if (StringTools.startsWith(base, songFolder + "-"))
+			base = base.substring(songFolder.length + 1);
+
+		base = sanitizeVariantId(base);
+		if (base == "")
+			base = sanitizeVariantId(audioFolder);
+		if (base == "")
+			base = "alt";
+
+		var id = base;
+		var n = 2;
+		while (usedIds.contains(id))
+		{
+			id = base + n;
+			n++;
+		}
+
+		return id;
+	}
+
+	static function sanitizeVariantId(input:String):String
+	{
+		var lower = input.toLowerCase();
+		var out = "";
+
+		for (i in 0...lower.length)
+		{
+			var c = lower.charAt(i);
+			if (StringNormalizer.letters.indexOf(c) != -1 || StringNormalizer.numbers.indexOf(c) != -1)
+				out += c;
+		}
+
+		while (out.length > 0 && StringNormalizer.numbers.indexOf(out.charAt(0)) != -1)
+			out = out.substring(1);
+
+		if (out.length == 1)
+			out += "alt";
+
+		return out;
 	}
 
 	public static function normalizeDifficultyId(rawDiffName:String):String

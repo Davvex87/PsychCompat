@@ -11,6 +11,7 @@ import funkin.data.song.SongRegistry;
 import funkin.util.Constants;
 import haxe.ds.StringMap;
 import psychcompat.PsychMod;
+import psychcompat.boot.PsychModDataLoader;
 
 class SongRegistryFiller
 {
@@ -45,18 +46,6 @@ class SongRegistryFiller
 				continue;
 			}
 
-			var difficultyIds = sortDifficultyIds(songGroup.difficulties);
-			if (difficultyIds.length == 0)
-			{
-				trace('Skipping song "${songId}" because it has no difficulties.');
-				continue;
-			}
-
-			var headerChart:PsychSong = songGroup.difficulties.get(difficultyIds[0]);
-
-			var meta = buildMetadata(songId, songGroup, headerChart, difficultyIds);
-			var chart = buildChartData(songGroup, difficultyIds);
-
 			var song:PsychCompatSong = cast ScriptedSong.scriptInit(SCRIPTED_SONG_CLASS, songId);
 			if (song == null)
 			{
@@ -65,25 +54,62 @@ class SongRegistryFiller
 			}
 
 			var injectedCharts:Map<String, SongChartData> = new StringMap();
-			injectedCharts.set(songGroup.variant, chart);
+			var audioFolders:Map<String, String> = new StringMap();
+			var metadatas:Array<SongMetadata> = [];
+			var extraVariantIds:Array<String> = [];
+			var describedVariants:Array<String> = [];
+
+			for (variant in songGroup.variants)
+			{
+				var difficultyIds = sortDifficultyIds(variant.difficulties);
+				if (difficultyIds.length == 0)
+				{
+					trace('Skipping variant "${variant.id}" of song "${songId}" because it has no difficulties.');
+					continue;
+				}
+
+				var headerChart:PsychSong = variant.difficulties.get(difficultyIds[0]);
+
+				metadatas.push(buildMetadata(songId, variant, headerChart, difficultyIds));
+				injectedCharts.set(variant.id, buildChartData(songGroup, variant, difficultyIds));
+				audioFolders.set(variant.id, variant.audioFolder);
+
+				if (variant.id != PsychModDataLoader.DEFAULT_VARIANT)
+					extraVariantIds.push(variant.id);
+
+				describedVariants.push('${variant.id} (songs/${variant.audioFolder}) [${difficultyIds.join(", ")}]');
+			}
+
+			if (metadatas.length == 0)
+			{
+				trace('Skipping song "${songId}" because none of its variants had usable difficulties.');
+				continue;
+			}
+
+			for (meta in metadatas)
+				if (meta.variation == PsychModDataLoader.DEFAULT_VARIANT)
+					meta.playData.songVariations = extraVariantIds.copy();
+
 			song.injectedCharts = injectedCharts;
+			song.audioFolders = audioFolders;
 
 			@:privateAccess
 			{
 				song._metadata.clear();
-				song._metadata.set(songGroup.variant, meta);
+				for (meta in metadatas)
+					song._metadata.set(meta.variation, meta);
 				song.difficulties.clear();
 				song.populateDifficulties();
 			}
 
-			song.validScore = false;
+			song.retargetAudio();
 
 			@:privateAccess SongRegistry.instance.entries.set(songId, song);
 			@:privateAccess SongRegistry.instance.scriptedEntryIds.set(songId, SCRIPTED_SONG_CLASS);
 
 			registered++;
 
-			trace('Registered song "${songId}" [${difficultyIds.join(", ")}]');
+			trace('Registered song "${songId}": ${describedVariants.join(" | ")}');
 		}
 
 		trace('Registered ${registered} of ${mod.songs.length} song(s) for mod "${mod.name}".');
@@ -93,9 +119,9 @@ class SongRegistryFiller
 	// METADATA
 	//
 
-	static function buildMetadata(songId:String, songGroup:PsychParsedSongGroup, headerChart:PsychSong, difficultyIds:Array<String>):SongMetadata
+	static function buildMetadata(songId:String, variant:PsychParsedVariant, headerChart:PsychSong, difficultyIds:Array<String>):SongMetadata
 	{
-		var meta = new SongMetadata(headerChart.song ?? songId, "Unknown", null, songGroup.variant);
+		var meta = new SongMetadata(headerChart.song ?? songId, "Unknown", null, variant.id);
 
 		// TODO: per-section BPM changes
 		meta.timeChanges = [new SongTimeChange(0, headerChart.bpm ?? 100, 4, 4)];
@@ -127,14 +153,14 @@ class SongRegistryFiller
 	// CHART
 	//
 
-	static function buildChartData(songGroup:PsychParsedSongGroup, difficultyIds:Array<String>):SongChartData
+	static function buildChartData(songGroup:PsychParsedSongGroup, variant:PsychParsedVariant, difficultyIds:Array<String>):SongChartData
 	{
 		var notes:Map<String, Array<SongNoteDataRaw>> = new StringMap();
 		var scrollSpeed:Map<String, Float> = new StringMap();
 
 		for (diffId in difficultyIds)
 		{
-			var psychChart:PsychSong = songGroup.difficulties.get(diffId);
+			var psychChart:PsychSong = variant.difficulties.get(diffId);
 
 			notes.set(diffId, translateNotes(psychChart));
 			scrollSpeed.set(diffId, psychChart.speed ?? 1.0);
@@ -142,7 +168,7 @@ class SongRegistryFiller
 
 		// TODO: translate songGroup.events into SongEventData.
 		var chart = new SongChartData(scrollSpeed, [], notes);
-		chart.variation = songGroup.variant;
+		chart.variation = variant.id;
 
 		return chart;
 	}
