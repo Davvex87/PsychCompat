@@ -1,0 +1,15 @@
+{
+	"title": "Psych Compatibility",
+	"description": "Adds compatibility with Psych Engine's (v1.0) API for using Psych mods in V-Slice",
+	"contributors": [
+		{
+			"name": "Davvex87",
+			"role": "Developer",
+			"url": "https://github.com/Davvex87"
+		}
+	],
+	"api_version": "0.9.0",
+	"mod_version": "0.0.1",
+	"license": "MIT",
+	"dependencies": {}
+}
