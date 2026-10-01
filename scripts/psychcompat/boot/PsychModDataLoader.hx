@@ -139,6 +139,33 @@ class PsychModDataLoader
 		//
 
 		buildParsedSongs(psychMod);
+
+
+
+		//
+		// CHARACTERS
+		//
+
+		trace("Loading characters...");
+
+		var charactersList = fs.readDirectory(Path.join([folderPath, "characters"]));
+		var characters:Array<PsychCharacter> = [];
+		for (characterFileName in charactersList)
+		{
+			if (!StringTools.endsWith(characterFileName, ".json"))
+			{
+				trace('Skipping non-JSON file "${characterFileName}"');
+				continue;
+			}
+
+			var characterPath = Path.join([folderPath, "characters", characterFileName]);
+			var characterData = fs.getFileContent(characterPath);
+			var character = Json.parse(characterData);
+
+			characters.push(character);
+
+			psychMod.characters.set(Path.withoutExtension(characterFileName), character);
+		}
 	}
 
 	public static function buildParsedSongs(psychMod:PsychMod):Void

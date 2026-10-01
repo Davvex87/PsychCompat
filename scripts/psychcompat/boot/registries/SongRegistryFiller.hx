@@ -129,8 +129,7 @@ class SongRegistryFiller
 		meta.playData.difficulties = difficultyIds;
 
 		// TODO: actually add characters. Parse them from psych's character.json format, should be easy...
-		//meta.playData.characters = new SongCharacterData(headerChart.player1 ?? "bf", headerChart.gfVersion ?? "gf", headerChart.player2 ?? "dad");
-		meta.playData.characters = new SongCharacterData("bf", "gf", "dad");
+		meta.playData.characters = new SongCharacterData(headerChart.player1 ?? "bf", headerChart.gfVersion ?? "gf", headerChart.player2 ?? "dad");
 
 		// TODO: actually add stages. This will be much harder though because psych stages are just lua scripts...
 		//meta.playData.stage = headerChart.stage ?? "mainStage";

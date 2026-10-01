@@ -16,6 +16,8 @@ class PsychMod
 	public var rawSongs:Array<PsychRawSongGroup>;
 	public var songs:Array<PsychParsedSongGroup>;
 
+	public var characters:Map<String, PsychCharacter>;
+
 	public function new(folderName:String, pack:PsychPack)
 	{
 		this.folderName = folderName;
@@ -27,6 +29,8 @@ class PsychMod
 		weeks = new StringMap();
 		rawSongs = [];
 		songs = [];
+
+		characters = new StringMap();
 	}
 
 	public function getRawSongGroupByName(name:String):Null<PsychRawSongGroup>
@@ -114,4 +118,29 @@ typedef PsychParsedVariant = {
 	var id:String;
 	var audioFolder:String;
 	var difficulties:Map<String, PsychSong>;
+}
+
+typedef PsychCharacter = {
+	var animations:Array<PsychAnimArray>;
+	var image:String;
+	var scale:Float;
+	var sing_duration:Float;
+	var healthicon:String;
+
+	var position:Array<Float>;
+	var camera_position:Array<Float>;
+
+	var flip_x:Bool;
+	var no_antialiasing:Bool;
+	var healthbar_colors:Array<Int>;
+	var vocals_file:String;
+}
+
+typedef PsychAnimArray = {
+	var anim:String;
+	var name:String;
+	var fps:Int;
+	var loop:Bool;
+	var indices:Array<Int>;
+	var offsets:Array<Int>;
 }

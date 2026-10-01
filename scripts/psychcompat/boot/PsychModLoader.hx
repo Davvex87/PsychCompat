@@ -11,6 +11,7 @@ import psychcompat.boot.PsychModDataLoader;
 import psychcompat.PsychMod;
 import psychcompat.boot.registries.LevelRegistryFiller;
 import psychcompat.boot.registries.SongRegistryFiller;
+import psychcompat.boot.registries.CharacterRegistryFiller;
 
 //import psychcompat.types.PsychPack;
 
@@ -106,6 +107,7 @@ class PsychModLoader extends Module
 
 		SongRegistryFiller.fillModSongs(mod);
 		LevelRegistryFiller.fillModLevels(mod);
+		CharacterRegistryFiller.fillModCharacters(mod);
 	}
 
 	public function getPsychPack(folderName:String):PsychPack
