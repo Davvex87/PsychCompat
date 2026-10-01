@@ -1,0 +1,4 @@
+assets/
+.haxelib
+.cache
+.DS_Store
