@@ -15,8 +15,8 @@ class PsychMod
 	public var weeks:Map<String, PsychWeek>;
 	public var rawSongs:Array<PsychRawSongGroup>;
 	public var songs:Array<PsychParsedSongGroup>;
-
 	public var characters:Map<String, PsychCharacter>;
+	public var menuCharacters:Map<String, PsychMenuCharacter>;
 
 	public function new(folderName:String, pack:PsychPack)
 	{
@@ -29,8 +29,8 @@ class PsychMod
 		weeks = new StringMap();
 		rawSongs = [];
 		songs = [];
-
 		characters = new StringMap();
+		menuCharacters = new StringMap();
 	}
 
 	public function getRawSongGroupByName(name:String):Null<PsychRawSongGroup>
@@ -157,4 +157,14 @@ typedef PsychAnimArray = {
 	var loop:Bool;
 	var indices:Array<Int>;
 	var offsets:Array<Int>;
+}
+
+typedef PsychMenuCharacter = {
+	var image:String;
+	var scale:Float;
+	var position:Array<Int>;
+	var idle_anim:String;
+	var confirm_anim:String;
+	var flipX:Bool;
+	var antialiasing:Null<Bool>;
 }
