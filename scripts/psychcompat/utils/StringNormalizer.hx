@@ -1,31 +1,72 @@
 package psychcompat.utils;
 
-import StringTools;
+import StringBuf;
 
 class StringNormalizer
 {
-	public static final letters:String = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	public static final numbers:String = "0123456789";
-
 	public static function normalizeString(input:String, ?useUnderscore:Bool = false):String
 	{
-		useUnderscore = useUnderscore != null ? useUnderscore : false;
+		if (input == null)
+			return "";
 
-		var normalized = input.toLowerCase();
-		if (useUnderscore)
+		var lower = input.toLowerCase();
+		var separator = useUnderscore == true ? "_" : "-";
+		var out = new StringBuf();
+		var lastWasSeparator = false;
+
+		for (i in 0...lower.length)
 		{
-			normalized = StringTools.replace(normalized, " ", "_");
-			normalized = StringTools.replace(normalized, "-", "_");
-			normalized = StringTools.replace(normalized, ".", "_");
+			var code = lower.charCodeAt(i);
+
+			if (isSeparatorCode(code))
+			{
+				if (!lastWasSeparator)
+					out.add(separator);
+				lastWasSeparator = true;
+			}
+			else if (isAlphanumericCode(code))
+			{
+				out.addChar(code);
+				lastWasSeparator = false;
+			}
 		}
-		else
-		{
-			normalized = StringTools.replace(normalized, " ", "-");
-			normalized = StringTools.replace(normalized, "_", "-");
-			normalized = StringTools.replace(normalized, ".", "-");
-		}
-		// ensure only letters, numbers, and underscores are present
-		normalized = normalized.split("").filter(function(c) return letters.indexOf(c) != -1 || numbers.indexOf(c) != -1 || c == "_" || c == "-").join("");
-		return normalized;
+
+		return out.toString();
+	}
+
+	public static function isLetter(c:String):Bool
+	{
+		return c != null && c.length == 1 && isLetterCode(c.charCodeAt(0));
+	}
+
+	public static function isDigit(c:String):Bool
+	{
+		return c != null && c.length == 1 && isDigitCode(c.charCodeAt(0));
+	}
+
+	public static function isAlphanumeric(c:String):Bool
+	{
+		return isLetter(c) || isDigit(c);
+	}
+
+	static function isSeparatorCode(code:Int):Bool
+	{
+		// ' ', '-', '_', '.'
+		return code == 32 || code == 45 || code == 95 || code == 46;
+	}
+
+	static function isLetterCode(code:Int):Bool
+	{
+		return (code >= 65 && code <= 90) || (code >= 97 && code <= 122);
+	}
+
+	static function isDigitCode(code:Int):Bool
+	{
+		return code >= 48 && code <= 57;
+	}
+
+	static function isAlphanumericCode(code:Int):Bool
+	{
+		return isLetterCode(code) || isDigitCode(code);
 	}
 }

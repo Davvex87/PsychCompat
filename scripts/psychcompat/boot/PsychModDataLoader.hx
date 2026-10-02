@@ -325,11 +325,11 @@ class PsychModDataLoader
 		for (i in 0...lower.length)
 		{
 			var c = lower.charAt(i);
-			if (StringNormalizer.letters.indexOf(c) != -1 || StringNormalizer.numbers.indexOf(c) != -1)
+			if (StringNormalizer.isAlphanumeric(c))
 				out += c;
 		}
 
-		while (out.length > 0 && StringNormalizer.numbers.indexOf(out.charAt(0)) != -1)
+		while (out.length > 0 && StringNormalizer.isDigit(out.charAt(0)))
 			out = out.substring(1);
 
 		if (out.length == 1)
