@@ -41,6 +41,20 @@ class PsychMod
 
 		return null;
 	}
+
+	public function char(name:String):String
+	{
+		if (characters.exists(name))
+			return id(name);
+		return name;
+	}
+
+	public function id(item:String):String
+	{
+		if (pack.runsGlobally)
+			return StringNormalizer.normalizeString(item);
+		return '${normalizedName}_${StringNormalizer.normalizeString(item)}';
+	}
 }
 
 typedef PsychPack = {

@@ -36,20 +36,20 @@ class SongRegistryFiller
 
 		for (songGroup in mod.songs)
 		{
-			var songId = songGroup.name;
+			var id = mod.id(songGroup.name);
 
-			trace('Registering song "${songId}"...');
+			trace('Registering song "${id}"...');
 
-			if (@:privateAccess SongRegistry.instance.entries.exists(songId))
+			if (@:privateAccess SongRegistry.instance.entries.exists(id))
 			{
-				trace('Skipping song "${songId}" because that id is already registered (base game, or another Psych mod).');
+				trace('Skipping song "${id}" because that id is already registered (base game, or another Psych mod).');
 				continue;
 			}
 
-			var song:PsychCompatSong = cast ScriptedSong.scriptInit(SCRIPTED_SONG_CLASS, songId);
+			var song:PsychCompatSong = cast ScriptedSong.scriptInit(SCRIPTED_SONG_CLASS, id);
 			if (song == null)
 			{
-				trace('Failed to instantiate scripted class "${SCRIPTED_SONG_CLASS}" for song "${songId}", is the script broken?');
+				trace('Failed to instantiate scripted class "${SCRIPTED_SONG_CLASS}" for song "${id}", is the script broken?');
 				continue;
 			}
 
@@ -64,13 +64,13 @@ class SongRegistryFiller
 				var difficultyIds = sortDifficultyIds(variant.difficulties);
 				if (difficultyIds.length == 0)
 				{
-					trace('Skipping variant "${variant.id}" of song "${songId}" because it has no difficulties.');
+					trace('Skipping variant "${variant.id}" of song "${id}" because it has no difficulties.');
 					continue;
 				}
 
 				var headerChart:PsychSong = variant.difficulties.get(difficultyIds[0]);
 
-				metadatas.push(buildMetadata(songId, variant, headerChart, difficultyIds));
+				metadatas.push(buildMetadata(mod, id, variant, headerChart, difficultyIds));
 				injectedCharts.set(variant.id, buildChartData(songGroup, variant, difficultyIds));
 				audioFolders.set(variant.id, variant.audioFolder);
 
@@ -82,7 +82,7 @@ class SongRegistryFiller
 
 			if (metadatas.length == 0)
 			{
-				trace('Skipping song "${songId}" because none of its variants had usable difficulties.');
+				trace('Skipping song "${id}" because none of its variants had usable difficulties.');
 				continue;
 			}
 
@@ -104,12 +104,12 @@ class SongRegistryFiller
 
 			song.retargetAudio();
 
-			@:privateAccess SongRegistry.instance.entries.set(songId, song);
-			@:privateAccess SongRegistry.instance.scriptedEntryIds.set(songId, SCRIPTED_SONG_CLASS);
+			@:privateAccess SongRegistry.instance.entries.set(id, song);
+			@:privateAccess SongRegistry.instance.scriptedEntryIds.set(id, SCRIPTED_SONG_CLASS);
 
 			registered++;
 
-			trace('Registered song "${songId}": ${describedVariants.join(" | ")}');
+			trace('Registered song "${id}": ${describedVariants.join(" | ")}');
 		}
 
 		trace('Registered ${registered} of ${mod.songs.length} song(s) for mod "${mod.name}".');
@@ -119,9 +119,9 @@ class SongRegistryFiller
 	// METADATA
 	//
 
-	static function buildMetadata(songId:String, variant:PsychParsedVariant, headerChart:PsychSong, difficultyIds:Array<String>):SongMetadata
+	static function buildMetadata(mod:PsychMod, id:String, variant:PsychParsedVariant, headerChart:PsychSong, difficultyIds:Array<String>):SongMetadata
 	{
-		var meta = new SongMetadata(headerChart.song ?? songId, "Unknown", null, variant.id);
+		var meta = new SongMetadata(headerChart.song ?? id, "Unknown", null, variant.id);
 
 		// TODO: per-section BPM changes
 		meta.timeChanges = [new SongTimeChange(0, headerChart.bpm ?? 100, 4, 4)];
@@ -129,13 +129,13 @@ class SongRegistryFiller
 		meta.playData.difficulties = difficultyIds;
 
 		// TODO: actually add characters. Parse them from psych's character.json format, should be easy...
-		meta.playData.characters = new SongCharacterData(headerChart.player1 ?? "bf", headerChart.gfVersion ?? "gf", headerChart.player2 ?? "dad");
+		meta.playData.characters = new SongCharacterData(mod.char(headerChart.player1 ?? "bf"), mod.char(headerChart.gfVersion ?? "gf"), mod.char(headerChart.player2 ?? "dad"));
 
 		// TODO: actually add stages. This will be much harder though because psych stages are just lua scripts...
-		//meta.playData.stage = headerChart.stage ?? "mainStage";
+		//meta.playData.stage = mod.id(headerChart.stage) ?? "mainStage";
 		meta.playData.stage = "mainStage";
 
-		meta.playData.noteStyle = headerChart.arrowSkin ?? Constants.DEFAULT_NOTE_STYLE;
+		meta.playData.noteStyle = headerChart.arrowSkin != null ? mod.id(headerChart.arrowSkin) ?? Constants.DEFAULT_NOTE_STYLE : Constants.DEFAULT_NOTE_STYLE;
 
 		meta.playData.songVariations = [];
 
@@ -193,6 +193,9 @@ class SongRegistryFiller
 				var data:Int = Std.int((note[1] ?? 0.0));
 				var length:Float = note.length > 2 ? (note[2] ?? 0.0) : 0.0;
 				var rawKind:String = note.length > 3 ? (note[3] ?? "") : "";
+
+				if (rawKind != "")
+					continue;
 
 				result.push(new SongNoteDataRaw(time, data, length, mapNoteKind(rawKind)));
 			}

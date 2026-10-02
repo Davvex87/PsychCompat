@@ -29,11 +29,11 @@ class LevelRegistryFiller
 			};
 
 			for (song in week.songs)
-				translatedLevelData.songs.push(StringNormalizer.normalizeString(song[0]));
+				translatedLevelData.songs.push(mod.id(song[0]));
 
 			var translatedStr = Json.stringify(translatedLevelData);
 
-			var id = '${mod.normalizedName}-${StringNormalizer.normalizeString(fileName)}';
+			var id = mod.id(fileName);
 			if (@:privateAccess LevelRegistry.instance.entries.exists(id))
 			{
 				trace('Skipping week "${fileName}" because level id "${id}" is already registered.');

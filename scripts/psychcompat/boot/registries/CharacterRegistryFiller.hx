@@ -10,9 +10,10 @@ class CharacterRegistryFiller
 
 		for (charName => character in mod.characters)
 		{
-			if (charCache.exists(charName))
+			var id = mod.id(charName);
+			if (charCache.exists(id))
 			{
-				trace('Skipping character "${charName}" because that id is already registered (base game, or another Psych mod).');
+				trace('Skipping character "${id}" because that id is already registered (base game, or another Psych mod).');
 				continue;
 			}
 			
@@ -30,7 +31,7 @@ class CharacterRegistryFiller
   				cameraOffsets: character.camera_position,
   				isPixel: character.no_antialiasing,
   				danceEvery: 1.0,
-  				singTime: character.sing_duration / 4,
+  				singTime: character.sing_duration/* / 4*/,
   				animations: [],
   				startingAnimation: null,
   				flipX: character.flip_x,
@@ -62,7 +63,7 @@ class CharacterRegistryFiller
 				translatedCharData.animations.push(translatedAnimData);
 			}
 			
-			charCache.set(charName, translatedCharData);
+			charCache.set(id, translatedCharData);
 		}
 	}
 }
