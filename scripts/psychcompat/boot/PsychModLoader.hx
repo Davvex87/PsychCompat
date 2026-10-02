@@ -1,5 +1,6 @@
 package psychcompat.boot;
 
+import funkin.play.PlayState;
 import flixel.FlxG;
 import funkin.modding.module.Module;
 import funkin.modding.events.ScriptEvent;
@@ -23,6 +24,8 @@ class PsychModLoader extends Module
 	public var fs(default, null):PolymodFileSystemRef;
 	public var modRoot(default, null):String;
 
+	public var loadedMods(default, null):Array<PsychMod>;
+
 	public function new()
 	{
 		super("PsychModLoader");
@@ -34,6 +37,7 @@ class PsychModLoader extends Module
 		polymodAssetLib = assetLib.p;
 		fs = polymodAssetLib.fileSystem;
 		modRoot = fs.modRoot;
+		loadedMods = [];
 
 		trace("Loading virtual psych mods...");
 		loadVirtualMods();
@@ -51,18 +55,18 @@ class PsychModLoader extends Module
 		trace('Found ${mods.length} mod(s): [${mods.join(", ")}]');
 
 		var packs = loadAllPsychPacks(mods);
-		var psychMods:Array<PsychMod> = [];
 
 		for (folderName => pack in packs)
 		{
+			trace('Creating Psych mod "$folderName"');
 			var psychMod = new PsychMod(folderName, pack);
 			PsychModDataLoader.loadPsychModData(Path.join([modRoot, folderName]), psychMod);
-			psychMods.push(psychMod);
+			loadedMods.push(psychMod);
 		}
 
-		for (psychMod in psychMods)
+		for (psychMod in loadedMods)
 		{
-			trace('Loading Psych mod "${psychMod.name}" - "${psychMod.pack.description}"');
+			trace('Loading Psych mod "${psychMod.name}" assets...');
 
   			var dir = Path.join([modRoot, psychMod.folderName]);
 
@@ -70,12 +74,14 @@ class PsychModLoader extends Module
   			//polymodAssetLib.modIds.insert(0, psychMod.folderName);
 
   			polymodAssetLib.initMod(dir); // is this needed here?
+		}
+		polymodAssetLib.clearCache();
 
-
+		for (psychMod in loadedMods)
+		{
+			trace('Filling game registries for Psych mod "${psychMod.name}"...');
 			fillGameRegistries(psychMod);
 		}
-
-		polymodAssetLib.clearCache();
 	}
 
 	public function loadAllPsychPacks(psychMods:Array<String>):Map<String, PsychPack>
@@ -103,11 +109,9 @@ class PsychModLoader extends Module
 
 	public function fillGameRegistries(mod:PsychMod):Void
 	{
-		trace('Filling game registries for Psych mod "${mod.name}"...');
-
+		CharacterRegistryFiller.fillModCharacters(mod);
 		SongRegistryFiller.fillModSongs(mod);
 		LevelRegistryFiller.fillModLevels(mod);
-		CharacterRegistryFiller.fillModCharacters(mod);
 	}
 
 	public function getPsychPack(folderName:String):PsychPack
@@ -137,6 +141,20 @@ class PsychModLoader extends Module
 		}
 
 		return mods;
+	}
+
+	override function onSongLoaded(event:SongLoadScriptEvent)
+	{
+		trace('Song loaded: ${event.id}');
+
+		super.onSongLoaded(event);
+	}
+
+	override function onStateChangeBegin(event:StateChangeScriptEvent)
+	{
+		trace('State change begin: ${event.targetState}');
+
+		super.onStateChangeBegin(event);
 	}
 }
 
