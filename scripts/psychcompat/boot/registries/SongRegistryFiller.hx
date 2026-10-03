@@ -195,6 +195,23 @@ class SongRegistryFiller
 			}
 		}
 
+		for (psychEvent in songGroup.events)
+		{
+			var eventTime:Float = psychEvent[0];
+			var eventsList:Array<Dynamic> = psychEvent[1];
+			for (event in eventsList)
+			{
+				var eventName:String = event[0];
+				var eventValue1:String = event[1];
+				var eventValue2:String = event.length > 2 ? (event[2]) : null;
+
+				events.push(new SongEventDataRaw(eventTime, eventName, {
+					value1: eventValue1,
+					value2: eventValue2
+				}));
+			}
+		}
+
 		// TODO: translate songGroup.events into SongEventData.
 		var chart = new SongChartData(scrollSpeed, events, notes);
 		chart.variation = variant.id;

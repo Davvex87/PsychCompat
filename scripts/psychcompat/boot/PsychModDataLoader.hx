@@ -119,8 +119,12 @@ class PsychModDataLoader
 					{
 						trace('Loading events for song "${songName}" from file "${songFileName}"');
 						var eventsData = fs.getFileContent(Path.join([songPath, songFileName]));
-						var events = Json.parse(eventsData);
-						rawSongGroup.events = events;
+						var eventsJson:Dynamic = Json.parse(eventsData);
+						if (eventsJson.song != null)
+							eventsJson = eventsJson.song;
+						if (eventsJson.notes != null)
+							convert(eventsJson);
+						rawSongGroup.events = eventsJson.events != null ? eventsJson.events : [];
 						continue;
 					}
 				}

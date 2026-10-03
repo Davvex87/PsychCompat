@@ -83,7 +83,7 @@ typedef PsychWeek = {
 typedef PsychSong = {
 	var song:String;
 	var notes:Array<PsychSongSection>;
-	var events:Array<Dynamic>;
+	var events:Array<Array<Dynamic>>;
 	var bpm:Float;
 	var needsVoices:Bool;
 	var speed:Float;
@@ -119,13 +119,13 @@ typedef PsychSongSection = {
 typedef PsychRawSongGroup = {
 	var folderName:String;
 	var difficulties:Map<String, PsychSong>;
-	var events:Array<Dynamic>;
+	var events:Array<Array<Dynamic>>;
 }
 
 typedef PsychParsedSongGroup = {
 	var name:String;
 	var variants:Array<PsychParsedVariant>;
-	var events:Array<Dynamic>;
+	var events:Array<Array<Dynamic>>;
 }
 
 typedef PsychParsedVariant = {
