@@ -60,17 +60,25 @@ class PsychModDataLoader
 		if (songsList.length == 0)
 			trace("No songs found in the mod folder.");
 
-		var validSongsList = [];
+		var validSongsList:Array<String> = [];
+		var songFolders:Map<String, String> = new StringMap();
 		for (week in weeks)
 		{
 			for (song in week.songs)
 			{
 				var songName = StringNormalizer.normalizeString(song[0]);
-				trace(songName);
-				if (songsList.contains(songName) && !validSongsList.contains(songName))
+				if (validSongsList.contains(songName))
+					continue;
+
+				var songFolder = resolveSongFolder(song[0], songsList);
+				if (songFolder == null)
 				{
-					validSongsList.push(songName);
+					trace('Could not find a data folder for song "${song[0]}"');
+					continue;
 				}
+
+				validSongsList.push(songName);
+				songFolders.set(songName, songFolder);
 			}
 		}
 
@@ -78,7 +86,8 @@ class PsychModDataLoader
 
 		for (songName in validSongsList)
 		{
-			var songPath = Path.join([folderPath, "data", songName]);
+			var songFolder = songFolders.get(songName);
+			var songPath = Path.join([folderPath, "data", songFolder]);
 
 			var rawSongGroup:PsychRawSongGroup = {
 				folderName: songName,
@@ -95,7 +104,11 @@ class PsychModDataLoader
 					continue;
 				}
 
-				if (!StringTools.startsWith(songFileName, songName))
+				var filePrefix = if (StringTools.startsWith(songFileName, songFolder)) songFolder
+					else if (StringTools.startsWith(songFileName, songName)) songName
+					else null;
+
+				if (filePrefix == null)
 				{
 					if (songFileName != "events.json")
 					{
@@ -115,7 +128,7 @@ class PsychModDataLoader
 				// Ex: "my-song-difficulty.json"
 				// Note: "my-song.json" is the same as "my-song-normal.json", it defaults to the normal difficulty
 
-				var difficultyName = songFileName.substring(songName.length + 1, songFileName.length - 5);
+				var difficultyName = songFileName.substring(filePrefix.length + 1, songFileName.length - 5);
 				var defaulted = false;
 
 				if (difficultyName.length == 0 || difficultyName == "" || difficultyName == "-" || difficultyName == " " || difficultyName == ".")
@@ -205,6 +218,21 @@ class PsychModDataLoader
 			psychMod.menuCharacters.set(Path.withoutExtension(fileName), prop);
 
 		}
+	}
+
+	public static function resolveSongFolder(songName:String, songsList:Array<String>):Null<String>
+	{
+		if (songName == null)
+			return null;
+
+		if (songsList.contains(songName))
+			return songName;
+
+		var normalized = StringNormalizer.normalizeString(songName);
+		if (songsList.contains(normalized))
+			return normalized;
+
+		return null;
 	}
 
 	public static function buildParsedSongs(psychMod:PsychMod):Void
