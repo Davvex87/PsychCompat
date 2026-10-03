@@ -7,6 +7,7 @@ import funkin.data.song.SongData.SongNoteDataRaw;
 import funkin.data.song.SongData.SongCharacterData;
 import funkin.data.song.SongData.SongMetadata;
 import funkin.data.song.SongData.SongTimeChange;
+import funkin.data.song.SongData.SongEventDataRaw;
 import funkin.data.song.SongRegistry;
 import funkin.util.Constants;
 import haxe.ds.StringMap;
@@ -157,6 +158,7 @@ class SongRegistryFiller
 		var notes:Map<String, Array<SongNoteDataRaw>> = new StringMap();
 		var scrollSpeed:Map<String, Float> = new StringMap();
 
+		var firstChart:PsychSong = variant.difficulties.get(difficultyIds[0]);
 		for (diffId in difficultyIds)
 		{
 			var psychChart:PsychSong = variant.difficulties.get(diffId);
@@ -165,8 +167,36 @@ class SongRegistryFiller
 			scrollSpeed.set(diffId, psychChart.speed ?? 1.0);
 		}
 
+		var events:Array<SongEventDataRaw> = [];
+		if (firstChart != null)
+		{
+			trace("Parsing song section events...");
+
+			var lastMustHitSection:Bool = false;
+			var lastSectionTime:Float = 0.0;
+			var curSectionBpm:Float = firstChart.bpm ?? 100.0;
+			for (i in 0...firstChart.notes.length)
+			{
+				var section = firstChart.notes[i];
+
+				var sectionTime:Float = lastSectionTime;
+				if ((section.changeBPM ?? false) && section.bpm != null)
+					curSectionBpm = section.bpm;
+				lastSectionTime += ((60.0 / curSectionBpm) * 1000) * 4.0;
+
+				var thisMustHitSection = section.mustHitSection;
+				if (thisMustHitSection != lastMustHitSection)
+				{
+					events.push(new SongEventDataRaw(sectionTime, "FocusCamera", {
+						char: thisMustHitSection ? 0 : 1,
+					}));
+					lastMustHitSection = thisMustHitSection;
+				}
+			}
+		}
+
 		// TODO: translate songGroup.events into SongEventData.
-		var chart = new SongChartData(scrollSpeed, [], notes);
+		var chart = new SongChartData(scrollSpeed, events, notes);
 		chart.variation = variant.id;
 
 		return chart;
