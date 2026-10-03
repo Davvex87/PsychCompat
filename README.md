@@ -54,10 +54,11 @@ The setup for developing PsychCompat is a bit messy since if we basically put an
 ### V0.1.0
 - [x] Weeks in story menu
 - [x] Songs, charts and difficulties
-- [ ] Characters
-- [ ] Song variants
-- [ ] Built-in Events (mostly camera stuff)
+- [x] Characters
+- [x] Song variants
+- [x] Built-in Events **(missing "change character" event)**
 - [ ] Built-in note types
+- [ ] Stages (json only)
 
 ### V0.2.0
 - [ ] HScript support
@@ -66,6 +67,7 @@ The setup for developing PsychCompat is a bit messy since if we basically put an
 - [ ] Custom hscript events
 - [ ] Custom hscript note kinds
 - [ ] Custom hscript song scripts
+- [ ] Context aware asset library
 
 ### Future
 - [ ] Lua support (oh boy...)
@@ -74,3 +76,10 @@ The setup for developing PsychCompat is a bit messy since if we basically put an
 - [ ] Custom lua events
 - [ ] Custom lua note kinds
 - [ ] Custom lua song scripts
+- [ ] Psych mod loading screen at startup
+- [ ] Achievements
+- [ ] Blammed event (some older mods still use it, but it got removed from psych, sadge)
+- [ ] Shaders
+- [ ] Dialogue
+- [ ] Psych accessibility options (options to replicate the look and feel of psych)
+- [ ] FNAF IN PSYCH ENGINE SUPPORT
