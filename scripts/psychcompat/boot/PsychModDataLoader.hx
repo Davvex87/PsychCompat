@@ -22,7 +22,11 @@ class PsychModDataLoader
 
 		trace("Loading weeks...");
 
-		var weeksList = fs.readDirectory(Path.join([folderPath, "weeks"]));
+		var weeksPath = Path.join([folderPath, "weeks"]);
+		var weeksList = fs.exists(weeksPath) ? fs.readDirectory(weeksPath) : [];
+		if (weeksList.length == 0)
+			trace("No weeks found in the mod folder.");
+
 		var weeks:Array<PsychWeek> = [];
 		for (weekFileName in weeksList)
 		{
@@ -51,7 +55,11 @@ class PsychModDataLoader
 
 		trace("Loading songs...");
 
-		var songsList = fs.readDirectory(Path.join([folderPath, "data"]));
+		var songsPath = Path.join([folderPath, "data"]);
+		var songsList = fs.exists(songsPath) ? fs.readDirectory(songsPath) : [];
+		if (songsList.length == 0)
+			trace("No songs found in the mod folder.");
+
 		var validSongsList = [];
 		for (week in weeks)
 		{
@@ -148,7 +156,11 @@ class PsychModDataLoader
 
 		trace("Loading characters...");
 
-		var charactersList = fs.readDirectory(Path.join([folderPath, "characters"]));
+		var charactersPath = Path.join([folderPath, "characters"]);
+		var charactersList = fs.exists(charactersPath) ? fs.readDirectory(charactersPath) : [];
+		if (charactersList.length == 0)
+			trace("No characters found in the mod folder.");
+		
 		var characters:Array<PsychCharacter> = [];
 		for (characterFileName in charactersList)
 		{
@@ -174,7 +186,9 @@ class PsychModDataLoader
 		//
 
 		var menuCharactersPath = Path.join([folderPath, "images", "menucharacters"]);
-		var menuCharactersList = fs.readDirectory(menuCharactersPath);
+		var menuCharactersList = fs.exists(menuCharactersPath) ? fs.readDirectory(menuCharactersPath) : [];
+		if (menuCharactersList.length == 0)
+			trace("No menu characters found in the mod folder.");
 
 		for (fileName in menuCharactersList)
 		{
