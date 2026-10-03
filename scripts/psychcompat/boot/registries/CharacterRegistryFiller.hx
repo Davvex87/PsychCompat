@@ -19,15 +19,18 @@ class CharacterRegistryFiller
 			
 			trace('Registering character "${charName}" as character...');
 
+			var scale = character.scale ?? 1;
+
 			var translatedCharData = {
   				version: "1.0.2",
   				name: charName,
   				renderType: "sparrow",
   				assetPath: character.image,
-  				scale: character.scale,
+  				scale: scale,
   				healthIcon: null,
   				death: null,
-  				offsets: character.position,
+  				// TODO: "character.position" does not match the correct place for the characters on stage.
+  				offsets: [0.0,0.0],
   				cameraOffsets: character.camera_position,
   				isPixel: character.no_antialiasing,
   				danceEvery: 1.0,
@@ -47,12 +50,14 @@ class CharacterRegistryFiller
 				offsets: []
 			}
 
-			for (anim in character.animations)
+			var animations = character.animations != null ? character.animations : [];
+
+			for (anim in animations)
 			{
 				var translatedAnimData = {
 					name: anim.anim,
 					prefix: anim.name,
-					offsets: cast anim.offsets,
+					offsets: convertAnimOffsets(anim.offsets, scale),
 					looped: anim.loop,
 					flipX: null,
 					flipY: null,
@@ -62,8 +67,14 @@ class CharacterRegistryFiller
 
 				translatedCharData.animations.push(translatedAnimData);
 			}
-			
+
 			charCache.set(id, translatedCharData);
 		}
+	}
+
+	static function convertAnimOffsets(offsets:Array<Int>, scale:Float):Array<Float>
+	{
+		if (offsets == null || offsets.length < 2) return [0.0, 0.0];
+		return [offsets[0] / scale, offsets[1] / scale];
 	}
 }
