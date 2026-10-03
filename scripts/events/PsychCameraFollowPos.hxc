@@ -1,0 +1,42 @@
+package events;
+
+import funkin.data.event.SongEventSchema;
+import funkin.data.song.SongData.SongEventData;
+import funkin.play.event.ScriptedSongEvent;
+import funkin.play.PlayState;
+import Std;
+
+using StringTools;
+
+class PsychCameraFollowPos extends ScriptedSongEvent
+{
+	public function new()
+	{
+		super("Camera Follow Pos");
+	}
+
+	override function handleEvent(data:SongEventData)
+	{
+    	if (PlayState.instance == null || PlayState.instance.currentStage == null) return;
+
+		var targetX:Float = Std.parseFloat(data.getString("value1"));
+		var targetY:Float = Std.parseFloat(data.getString("value2"));
+		
+        PlayState.instance.resetCamera(false, false, false);
+        PlayState.instance.cancelCameraFollowTween();
+        PlayState.instance.cameraFollowPoint.setPosition(targetX, targetY);
+	}
+
+	override function getTitle():String
+	{
+		return "(Psych) Camera Follow Pos";
+	}
+
+	override function getEventSchema():SongEventSchema
+	{
+		return [
+			{ name: "value1", title: "Value 1", type: "string", defaultValue: "" },
+			{ name: "value2", title: "Value 2", type: "string", defaultValue: "" }
+		];
+	}
+}

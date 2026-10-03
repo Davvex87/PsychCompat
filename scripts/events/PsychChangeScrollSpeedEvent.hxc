@@ -1,0 +1,47 @@
+package events;
+
+import funkin.data.event.SongEventSchema;
+import funkin.data.song.SongData.SongEventData;
+import funkin.play.event.ScriptedSongEvent;
+import funkin.play.PlayState;
+import flixel.tweens.FlxEase;
+import Std;
+import Math;
+import Reflect;
+
+using StringTools;
+
+class PsychChangeScrollSpeedEvent extends ScriptedSongEvent
+{
+	public function new()
+	{
+		super("Change Scroll Speed");
+	}
+
+	override function handleEvent(data:SongEventData)
+	{
+    	if (PlayState.instance == null || PlayState.instance.currentStage == null) return;
+
+		var scroll = Std.parseFloat(data.getString("value1"));
+		var durSeconds = Std.parseFloat(data.getString("value2"));
+		if (Math.isNaN(scroll)) scroll = 1.0;
+		if (Math.isNaN(durSeconds)) durSeconds = 0.0;
+
+    	scroll *= (PlayState.instance?.currentChart?.scrollSpeed ?? 1.0);
+
+        PlayState.instance.tweenScrollSpeed(scroll, durSeconds, FlxEase.linear, ['playerStrumline', 'opponentStrumline']);
+	}
+
+	override function getTitle():String
+	{
+		return "(Psych) Change Scroll Speed";
+	}
+
+	override function getEventSchema():SongEventSchema
+	{
+		return [
+			{ name: "value1", title: "Value 1", type: "string", defaultValue: "0" },
+			{ name: "value2", title: "Value 2", type: "string", defaultValue: "0" }
+		];
+	}
+}

@@ -1,0 +1,46 @@
+package events;
+
+import funkin.data.event.SongEventSchema;
+import funkin.data.song.SongData.SongEventData;
+import funkin.play.event.ScriptedSongEvent;
+import funkin.play.PlayState;
+
+using StringTools;
+
+class PsychHeyEvent extends ScriptedSongEvent
+{
+	public function new()
+	{
+		super("Hey");
+	}
+
+	override function handleEvent(data:SongEventData)
+	{
+    	if (PlayState.instance == null || PlayState.instance.currentStage == null) return;
+		
+		switch(data.getString("value1").toLowerCase().trim())
+		{
+			case 'bf' | 'boyfriend' | '0':
+				var bf = PlayState.instance.currentStage.getBoyfriend();
+        		bf.tempVocals = true;
+        		bf.playAnimation("hey", true);
+
+			case 'gf' | 'girlfriend' | '1':
+				var gf = PlayState.instance.currentStage.getGirlfriend();
+        		gf.playAnimation("cheer", true);
+		}
+	}
+
+	override function getTitle():String
+	{
+		return "(Psych) Hey";
+	}
+
+	override function getEventSchema():SongEventSchema
+	{
+		return [
+			{ name: "value1", title: "Value 1", type: "string", defaultValue: "0" },
+			{ name: "value2", title: "Value 2", type: "string", defaultValue: "" }
+		];
+	}
+}

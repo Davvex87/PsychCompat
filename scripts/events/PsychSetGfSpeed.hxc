@@ -1,0 +1,42 @@
+package events;
+
+import funkin.data.event.SongEventSchema;
+import funkin.data.song.SongData.SongEventData;
+import funkin.play.event.ScriptedSongEvent;
+import funkin.play.PlayState;
+import Std;
+import Math;
+
+using StringTools;
+
+class PsychSetGfSpeed extends ScriptedSongEvent
+{
+	public function new()
+	{
+		super("Set GF Speed");
+	}
+
+	override function handleEvent(data:SongEventData)
+	{
+    	if (PlayState.instance == null || PlayState.instance.currentStage == null) return;
+
+		var speed = Std.parseFloat(data.getString("value1"));
+		if(Math.isNaN(speed)) speed = 1.0;
+		
+		var gf = PlayState.instance.currentStage.getGirlfriend();
+		gf.danceEvery = speed;
+	}
+
+	override function getTitle():String
+	{
+		return "(Psych) Set GF Speed";
+	}
+
+	override function getEventSchema():SongEventSchema
+	{
+		return [
+			{ name: "value1", title: "Value 1", type: "string", defaultValue: "1" },
+			{ name: "value2", title: "Value 2", type: "string", defaultValue: "" }
+		];
+	}
+}

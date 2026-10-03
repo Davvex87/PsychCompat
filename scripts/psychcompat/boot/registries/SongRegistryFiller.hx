@@ -212,7 +212,6 @@ class SongRegistryFiller
 			}
 		}
 
-		// TODO: translate songGroup.events into SongEventData.
 		var chart = new SongChartData(scrollSpeed, events, notes);
 		chart.variation = variant.id;
 

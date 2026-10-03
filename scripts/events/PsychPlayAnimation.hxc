@@ -1,0 +1,49 @@
+package events;
+
+import funkin.data.event.SongEventSchema;
+import funkin.data.song.SongData.SongEventData;
+import funkin.play.event.ScriptedSongEvent;
+import funkin.play.PlayState;
+
+using StringTools;
+
+class PsychPlayAnimation extends ScriptedSongEvent
+{
+	public function new()
+	{
+		super("Play Animation");
+	}
+
+	override function handleEvent(data:SongEventData)
+	{
+    	if (PlayState.instance == null || PlayState.instance.currentStage == null) return;
+		
+		var target = null;
+		var anim = data.getString("value1");
+		switch(data.getString("value2").toLowerCase().trim())
+		{
+			case 'bf' | 'boyfriend':
+				target = PlayState.instance.currentStage.getBoyfriend();
+			case 'gf' | 'girlfriend':
+				target = PlayState.instance.currentStage.getGirlfriend();
+			default:
+				target = PlayState.instance.currentStage.getDad();
+		}
+		
+        target.tempVocals = true;
+        target.playAnimation(anim, true);
+	}
+
+	override function getTitle():String
+	{
+		return "(Psych) Play Animation";
+	}
+
+	override function getEventSchema():SongEventSchema
+	{
+		return [
+			{ name: "value1", title: "Value 1", type: "string", defaultValue: "0" },
+			{ name: "value2", title: "Value 2", type: "string", defaultValue: "" }
+		];
+	}
+}

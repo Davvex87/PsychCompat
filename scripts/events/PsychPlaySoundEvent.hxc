@@ -1,0 +1,43 @@
+package events;
+
+import funkin.data.event.SongEventSchema;
+import funkin.data.song.SongData.SongEventData;
+import funkin.play.event.ScriptedSongEvent;
+import funkin.play.PlayState;
+import flixel.FlxG;
+import Std;
+import Math;
+
+using StringTools;
+
+class PsychPlaySoundEvent extends ScriptedSongEvent
+{
+	public function new()
+	{
+		super("Play Sound");
+	}
+
+	override function handleEvent(data:SongEventData)
+	{
+    	if (PlayState.instance == null || PlayState.instance.currentStage == null) return;
+
+		var value1:String = data.getString("value1");
+		var value2:Float = Std.parseFloat(data.getString("value2"));
+		if (Math.isNaN(value2)) value2 = 1.0;
+		
+		FlxG.sound.play(Paths.sound(value1), value2);
+	}
+
+	override function getTitle():String
+	{
+		return "(Psych) Play Sound";
+	}
+
+	override function getEventSchema():SongEventSchema
+	{
+		return [
+			{ name: "value1", title: "Value 1", type: "string", defaultValue: "" },
+			{ name: "value2", title: "Value 2", type: "string", defaultValue: "1.0" }
+		];
+	}
+}

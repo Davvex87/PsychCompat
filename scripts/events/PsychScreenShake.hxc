@@ -1,0 +1,56 @@
+package events;
+
+import funkin.data.event.SongEventSchema;
+import funkin.data.song.SongData.SongEventData;
+import funkin.play.event.ScriptedSongEvent;
+import funkin.play.PlayState;
+import flixel.FlxG;
+import Std;
+import Math;
+
+using StringTools;
+
+class PsychScreenShake extends ScriptedSongEvent
+{
+	public function new()
+	{
+		super("Screen Shake");
+	}
+
+	override function handleEvent(data:SongEventData)
+	{
+    	if (PlayState.instance == null || PlayState.instance.currentStage == null) return;
+		
+		var valuesArray:Array<String> = [data.getString("value1"), data.getString("value2")];
+		var targetsArray:Array<FlxCamera> = [FlxG.camera, PlayState.instance.camHUD];
+
+		for (i in 0...targetsArray.length)
+		{
+			var split:Array<String> = valuesArray[i].split(',');
+			var duration:Float = 0;
+			var intensity:Float = 0;
+			if(split[0] != null) duration = Std.parseFloat(split[0].trim());
+			if(split[1] != null) intensity = Std.parseFloat(split[1].trim());
+			if(Math.isNaN(duration)) duration = 0;
+			if(Math.isNaN(intensity)) intensity = 0;
+
+			if(duration > 0 && intensity != 0)
+			{
+				targetsArray[i].shake(intensity, duration);
+			}
+		}
+	}
+
+	override function getTitle():String
+	{
+		return "(Psych) Screen Shake";
+	}
+
+	override function getEventSchema():SongEventSchema
+	{
+		return [
+			{ name: "value1", title: "Value 1", type: "string", defaultValue: "0" },
+			{ name: "value2", title: "Value 2", type: "string", defaultValue: "0" }
+		];
+	}
+}
